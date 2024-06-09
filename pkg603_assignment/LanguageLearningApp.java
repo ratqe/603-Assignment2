@@ -2,240 +2,208 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
-package pkg603_assignment;
+package Comp603;
 
 /**
  *
  * @author User
  */
-import javax.swing.*;
-import java.awt.*;
+import java.util.*;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
 
 public class LanguageLearningApp {
 
-    // main frame of the application
-    private JFrame frame;
-    
-    // text field for the user to enter their name
-    private JTextField nameField;
-    
-    // combo box for language selection
-    private JComboBox<String> languageComboBox;
-    
-    // label to display the current question
-    private JLabel questionLabel;
-    
-    // array of buttons for answer options
-    private JButton[] optionButtons;
-    
-    // label to display the current score
-    private JLabel scoreLabel;
-    
-    // list to store questions and answers
-    private List<String[]> questions;
-    
-    // integer to store the index of the current question
-    private int currentQuestionNum;
-    
-    // integer to store the user's score
-    private int score;
-    
-    // string to store the user's name
-    private String userName;
-
-    // Constructor for the main class
-    public LanguageLearningApp() 
+    public static void startApp() 
     {
-        // Call the initialize method to set up the GUI
-        initialize();
+        Scanner scanner = new Scanner(System.in);
+
+        // Welcome message and a prompt asking for a name
+        System.out.println("Welcome to the Language Learning App! (Input 'x' to quit)");
+        String userName = getValidName();
+        System.out.print("Hello, " + userName + "! let's start learning!\n");
+        
+        System.out.println("1. Korean Quiz");
+        
+        System.out.println("2. Japanese Quiz");
+
+        char languageChoice;
+        
+        // Loop to validate user input
+        while (true) 
+        {
+            System.out.print("Enter your choice (1 or 2), or 'x' to quit: ");
+            String input = scanner.nextLine();
+
+            // Check if the input is 'x', if so, close the program
+            if (input.equalsIgnoreCase("x")) {
+                System.out.println("Closing program.");
+                System.exit(0);
+            }
+
+            if (input.length() == 1) 
+            {
+                languageChoice = input.charAt(0);
+
+                if (languageChoice == '1' || languageChoice == '2') 
+                {
+                    System.out.println("Quiz will begin shortly...");
+
+                    // If the user inputs '1' it will begin the Korean Quiz
+                    if (languageChoice == '1') 
+                    {
+                        // Starts the Korean quiz if users input is '1'
+                        System.out.println("\nStarting the Korean Quiz:");
+                        startQuiz(KoreanQuestions.getQuestions(), userName);
+                    } else 
+                    {
+                        // Else starts Japanese quiz
+                        System.out.println("\nStarting the Japanese Quiz:");
+                        startQuiz(JapaneseQuestions.getQuestions(), userName);
+                    }
+                    break; // Exit the loop after starting the quiz
+                } else 
+                {
+                    // If users input is invalid a error message is shown
+                    System.out.println("Invalid choice. Please pick between 1 or 2");
+                }
+            } else 
+            {
+                // If user enters more than one character error message is shown
+                System.out.println("Invalid input. Please enter only one character");
+            }
+        }
+
     }
 
-    private void initialize() 
+    private static boolean startQuiz(List<String[]> questions, String userName) 
     {
-        //  new JFrame with the title "Language Learning App"
-        frame = new JFrame("Language Learning App");
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setSize(600, 400);
-        frame.setLayout(new CardLayout());
+        Scanner scanner = new Scanner(System.in);
+        Random random = new Random();
 
-        // Start Panel
-        JPanel startPanel = new JPanel();
-        startPanel.setLayout(new GridLayout(5, 1));
+        // Keeps track of users score
+        int score = 0;
 
-        // JLabel for the name prompt
-        JLabel nameLabel = new JLabel("Please enter your name:");
-        startPanel.add(nameLabel);
+        // To keep track of the current question number
+        int questionNumber = 0;
 
-        // JTextField for user to enter their name
-        nameField = new JTextField();
-        startPanel.add(nameField);
-
-        // JLabel for the language selection prompt
-        JLabel languageLabel = new JLabel("Select language for quiz:");
-        startPanel.add(languageLabel);
-
-        // JComboBox with language options
-        languageComboBox = new JComboBox<>(new String[]{"Korean", "Japanese"});
-        startPanel.add(languageComboBox);
-
-        // JButton to start the quiz
-        JButton startButton = new JButton("Start Quiz");
-        startButton.addActionListener(e -> startQuiz());
-        startPanel.add(startButton);
-
-        frame.add(startPanel, "StartPanel");
-
-        // Quiz Panel
-        JPanel quizPanel = new JPanel();
-        quizPanel.setLayout(new GridLayout(6, 1));
-
-        // JLabel for displaying the question
-        questionLabel = new JLabel("Question");
-        quizPanel.add(questionLabel);
-
-        // Initialize the array of option buttons with a size of 3
-        optionButtons = new JButton[3];
-        
-        // Loop to create each option button
-        for (int i = 0; i < 3; i++) 
+        // Loop through each question
+        for (String[] q : questions) 
         {
-            optionButtons[i] = new JButton();
-            int finalI = i;
-            optionButtons[i].addActionListener(e -> checkAnswer(optionButtons[finalI].getText()));
-            quizPanel.add(optionButtons[i]);
+            // Increment the question number
+            questionNumber++;
+
+            // Gets the word for the question from the Korean or Japanese classes
+            String word = q[0];
+
+            // Gets the correct translation for the word chosen above, from the Korean or Japanese classes
+            String correctTranslation = q[1];
+
+            // Generate options for the questions using the options in the generateOptions method
+            List<String> options = generateOptions(correctTranslation);
+
+            // Shuffle the options for the questions
+            Collections.shuffle(options, random);
+
+            // Displays the questions with the options for the user
+            System.out.println("What is the translation of '" + word + "'?");
+            for (int i = 0; i < options.size(); i++) 
+            {
+                System.out.println((i + 1) + ". " + options.get(i));
+            }
+
+            String userInput;
+            int userChoice;
+
+            // Loops until a valid input is given
+            while (true) 
+            {
+                System.out.print("Enter your choice (1, 2, or 3), or 'x' to quit: ");
+                userInput = scanner.nextLine();
+
+                // Checking if user inputs 'x', if they do it closes the program
+                if (userInput.equalsIgnoreCase("x")) 
+                {
+                    System.out.println("Closing program.");
+
+                    // Indicates that the user wants to quit
+                    return true;
+                }
+
+                try 
+                {
+                    // Parse user input to integer
+                    userChoice = Integer.parseInt(userInput);
+
+                    // Checking if the userChoice is between the option size
+                    if (userChoice >= 1 && userChoice <= options.size()) 
+                    {
+                        // Valid input, exit the loop
+                        break;
+                    } else 
+                    {
+                        // Message telling the user their input is invalid
+                        System.out.println("Invalid choice. Please enter a number between 1 and " + options.size());
+                    }
+                } catch (NumberFormatException e) 
+                {
+                    // Error Message if the user does not enter a number
+                    System.out.println("Invalid choice. Please enter a valid number.");
+                }
+            }
+
+            // Get the users answer based on their choice
+            String userAnswer = options.get(userChoice - 1);
+
+            // Checks if users answers is correct
+            if (userAnswer.equals(correctTranslation)) 
+            {
+                // If users answer equals to the correct translation print "Correct!"
+                System.out.println("Correct!");
+                // Adds to score if answer is correct
+                score++;
+            } else 
+            {
+                // Else if the users answer is wrong it tells the user its incorrect
+                // and gives them the correct answer allowing them to learn
+                System.out.println("Incorrect. The correct answer is: " + correctTranslation);
+            }
         }
 
-        // JLabel for displaying the score
-        scoreLabel = new JLabel("Score: 0");
-        quizPanel.add(scoreLabel);
-
-        frame.add(quizPanel, "QuizPanel");
-
-        frame.setVisible(true);
+        // Completion message outside the loop, so it does not show every time a question is answered
+        System.out.println("Congrats " + userName + " you completed the quiz. Your score: " + score + "/" + questions.size());
+        saveScoreToFile(userName, score);
+        return false;
     }
 
-    // Method to start the quiz
-    private void startQuiz() 
-    {
-        userName = nameField.getText();
-        String language = (String) languageComboBox.getSelectedItem();
+    private static Scanner scanner = new Scanner(System.in);
 
-        // Check if the user's name is valid
-        if (!isValidName(userName)) 
-        {
-            JOptionPane.showMessageDialog(frame, "Invalid input. Please enter a proper name without numbers.");
-            return;
+    private static String getValidName() {
+        while (true) {
+            System.out.println("Please enter your name: ");
+            String userName = scanner.nextLine();
+
+            // Check if the input is 'x', if so, close the program
+            if (userName.equalsIgnoreCase("x")) {
+                System.out.println("Closing program.");
+                System.exit(0);
+            }
+
+            // check if the input is empty
+            if (userName.isEmpty()) {
+                System.out.println("Invalid input. Input cannot be empty.");
+                continue; // ask for input again
+            }
+
+            // Ensure input contains only letters
+            if (userName.matches("[a-zA-Z\\s]{0,10}")) {
+                return userName;
+            } else {
+                System.out.println("Invalid input. Please enter a proper name without numbers.");
+            }
+
         }
-
-        // If the selected language is Korean start Koren quiz
-        if (language.equals("Korean")) 
-        {
-            questions = KoreanQuestions.getQuestions();
-        } 
-        else 
-        {
-            // else start Japanese quiz
-            questions = JapaneseQuestions.getQuestions();
-        }
-
-        // Initialize the current question number to 0
-        currentQuestionNum = 0;
-        
-        // Initialize the score to 0
-        score = 0;
-        
-        // Show the first question
-        showNextQuestion();
-    }
-
-    // Method to display the next question
-    private void showNextQuestion() {
-        
-        // Check if there are no more questions
-        if (currentQuestionNum >= questions.size()) 
-        {
-            // Shows a completion message with the user's score , once the quiz is finished
-            JOptionPane.showMessageDialog(frame, "Quiz Completed! Your score: " + score);
-            
-            // Save the user's score to a file
-            saveScoreToFile(userName, score);
-            
-            // Remove all components from the frame
-            frame.getContentPane().removeAll();
-            
-            // Re-initialize the application
-            initialize();
-            return;
-        }
-
-        // Gets the current question
-        String[] question = questions.get(currentQuestionNum);
-        
-        // Add a new word as the question
-        questionLabel.setText("What is the translation of '" + question[0] + "'?");
-        
-        // Generates options for the current question
-        List<String> options = generateOptions(question[1]);
-
-        // Loop through the option buttons and adds text to each button
-        for (int i = 0; i < optionButtons.length; i++) 
-        {
-            optionButtons[i].setText(options.get(i));
-        }
-
-        // Update the score label
-        scoreLabel.setText("Score: " + score);
-        
-        // Remove all components from the frame
-        frame.getContentPane().removeAll();
-        
-        // Add the parent container of the question label to the frame
-        frame.add(questionLabel.getParent());
-        
-        // Revalidate the frame
-        frame.revalidate();
-        
-        // Repaint the frame
-        frame.repaint();
-    }
-    
-    // Method to check the user's answer
-    private void checkAnswer(String answer) {  
-        // Get the correct answer for the current question
-        String correctAnswer = questions.get(currentQuestionNum)[1];  
-        // Check if the user's answer is correct
-        if (answer.equals(correctAnswer)) {
-            // Increment the score
-            score++;
-            // Show a message that the answer is correct
-            JOptionPane.showMessageDialog(frame, "Correct!"); 
-             
-        // If the user's answer is incorrect
-        } else {
-            // Show a message that the answer is incorrect
-            JOptionPane.showMessageDialog(frame, "Incorrect. The correct answer is: " + correctAnswer);  
-        }
-        // Increment the current question index
-        currentQuestionNum++;
-        // Show the next question
-        showNextQuestion(); 
-    }
-
-    // Method to validate the user's name
-    private boolean isValidName(String userName) {
-        // Check if the name is empty
-        if (userName.isEmpty()) {
-            return false;
-        }
-        // Checks if the username only has letters and is 10 or less characters
-        return userName.matches("[a-zA-Z\\s]{1,10}");
     }
 
     private static List<String> generateOptions(String correctTranslation) 
@@ -264,14 +232,18 @@ public class LanguageLearningApp {
         return options;
     }
 
-    // Method to save the user's score to a file
-    private static void saveScoreToFile(String userName, int score) {
-        try (PrintWriter writer = new PrintWriter(new FileWriter("user_scores.txt", true))) {
+    private static void saveScoreToFile(String userName, int score) 
+    {
+        // Opening the 'user_score,txt' file if it does not exist it will be created
+        try ( PrintWriter writer = new PrintWriter(new FileWriter("user_scores.txt", true))) 
+        {
+
+            // Once file is opened update the file with the users name and the score they got
             writer.println(userName + "," + score);
-        } catch (IOException e) {
+        } catch (IOException e)
+        {
+            // If a IOException occurs print that stack trace
             e.printStackTrace();
         }
     }
 }
-
-
